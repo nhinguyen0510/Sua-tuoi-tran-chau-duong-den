@@ -2,14 +2,67 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOpenAIClient } from "@/lib/openai";
 import { MOCK_RESULT } from "@/lib/mock";
 import { SYSTEM_PROMPT, buildUserPrompt } from "@/lib/prompt";
+import { extractTextFromPdf } from "@/lib/pdf";
+
+async function fileToText(file: File | null): Promise<string> {
+  if (!file || file.size === 0) return "";
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const text = await extractTextFromPdf(buffer);
+  return text.trim();
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { cvText, jdText, useMock } = await req.json();
+    const contentType = req.headers.get("content-type") || "";
 
-    if (!cvText || !jdText) {
+    let cvText = "";
+    let jdText = "";
+    let useMock = false;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+
+      const cvFile = formData.get("cvFile") as File | null;
+      const jdFile = formData.get("jdFile") as File | null;
+
+      const cvTextInput = formData.get("cvText");
+      const jdTextInput = formData.get("jdText");
+      const mockValue = formData.get("useMock");
+
+      useMock = mockValue === "true";
+
+      const parsedCvText = await fileToText(cvFile);
+      const parsedJdText = await fileToText(jdFile);
+
+      cvText =
+        parsedCvText ||
+        (typeof cvTextInput === "string" ? cvTextInput.trim() : "");
+
+      jdText =
+        parsedJdText ||
+        (typeof jdTextInput === "string" ? jdTextInput.trim() : "");
+    } else {
+      const body = await req.json();
+      cvText = (body.cvText || "").trim();
+      jdText = (body.jdText || "").trim();
+      useMock = !!body.useMock;
+    }
+
+    if (!cvText) {
       return NextResponse.json(
-        { error: "cvText and jdText are required" },
+        { error: "CV input is required. Upload a PDF or paste CV text." },
+        { status: 400 }
+      );
+    }
+
+    if (!jdText) {
+      return NextResponse.json(
+        {
+          error:
+            "Job Description input is required. Upload a PDF or paste JD text."
+        },
         { status: 400 }
       );
     }
@@ -58,7 +111,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Analyze API error:", error);
     return NextResponse.json(
-      { error: "Failed to analyze candidate profile" },
+      { error: "Failed to analyze candidate profile or job description PDF" },
       { status: 500 }
     );
   }
