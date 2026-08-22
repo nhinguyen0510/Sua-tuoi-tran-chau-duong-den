@@ -7,6 +7,8 @@ import { SAMPLE_CV, SAMPLE_JD } from "@/lib/sample";
 export default function HomePage() {
   const [cvText, setCvText] = useState("");
   const [jdText, setJdText] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [jdFile, setJdFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [useMock, setUseMock] = useState(true);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -15,11 +17,15 @@ export default function HomePage() {
   const loadSample = () => {
     setCvText(SAMPLE_CV);
     setJdText(SAMPLE_JD);
+    setCvFile(null);
+    setJdFile(null);
   };
 
   const clearAll = () => {
     setCvText("");
     setJdText("");
+    setCvFile(null);
+    setJdFile(null);
     setResult(null);
     setError("");
   };
@@ -30,12 +36,24 @@ export default function HomePage() {
     setResult(null);
 
     try {
+      const formData = new FormData();
+      formData.append("useMock", String(useMock));
+
+      if (cvFile) {
+        formData.append("cvFile", cvFile);
+      } else {
+        formData.append("cvText", cvText);
+      }
+
+      if (jdFile) {
+        formData.append("jdFile", jdFile);
+      } else {
+        formData.append("jdText", jdText);
+      }
+
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ cvText, jdText, useMock })
+        body: formData
       });
 
       const data = await res.json();
@@ -56,6 +74,11 @@ export default function HomePage() {
     }
   };
 
+  const canAnalyze =
+    !loading &&
+    (cvFile || cvText.trim()) &&
+    (jdFile || jdText.trim());
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-7xl px-6 py-10">
@@ -68,9 +91,9 @@ export default function HomePage() {
                 </p>
                 <h1 className="text-4xl font-bold tracking-tight">BridgeAU AI</h1>
                 <p className="mt-3 max-w-3xl text-slate-200">
-                  Translate international talent into Australian job-readiness.
-                  Analyze CVs, compare with Australian job descriptions, identify
-                  skill gaps, rewrite resume content, and generate interview prep.
+                  Upload a candidate CV and a job description as PDF or text,
+                  then generate employability analysis, skill gaps, AU-style resume rewrite,
+                  interview coaching, and an action plan.
                 </p>
               </div>
               <div className="rounded-2xl bg-white/10 p-4 text-sm">
@@ -86,7 +109,7 @@ export default function HomePage() {
 
         <section className="mb-6 grid gap-4 lg:grid-cols-3">
           <StatCard title="Primary User" value="International students & skilled migrants" />
-          <StatCard title="Core Outcome" value="Better job-readiness in Australia" />
+          <StatCard title="Input Mode" value="PDF upload or pasted text" />
           <StatCard title="MVP Mode" value={useMock ? "Mock Demo Mode" : "Live AI Mode"} />
         </section>
 
@@ -95,7 +118,7 @@ export default function HomePage() {
             <div>
               <h2 className="text-2xl font-semibold">Profile Analysis</h2>
               <p className="mt-1 text-slate-600">
-                Paste a candidate CV and target job description to generate an employability analysis.
+                Upload PDF files or paste raw text for both CV and Job Description.
               </p>
             </div>
 
@@ -104,7 +127,7 @@ export default function HomePage() {
                 onClick={loadSample}
                 className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
               >
-                Load Sample Data
+                Load Sample Text
               </button>
               <button
                 onClick={clearAll}
@@ -129,38 +152,78 @@ export default function HomePage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div>
+            <div className="rounded-2xl border border-slate-200 p-4">
               <label className="mb-2 block text-sm font-semibold text-slate-800">
-                Candidate CV
+                Upload CV PDF
               </label>
-              <textarea
-                value={cvText}
-                onChange={(e) => setCvText(e.target.value)}
-                placeholder="Paste the candidate CV text here..."
-                className="h-96 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setCvFile(file);
+                }}
+                className="block w-full rounded-xl border border-slate-300 bg-white p-3 text-sm"
               />
+              {cvFile && (
+                <p className="mt-2 text-sm text-slate-600">
+                  Selected CV file: {cvFile.name}
+                </p>
+              )}
+
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-semibold text-slate-800">
+                  Or paste CV text
+                </label>
+                <textarea
+                  value={cvText}
+                  onChange={(e) => setCvText(e.target.value)}
+                  placeholder="Paste the candidate CV text here..."
+                  className="h-72 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                />
+              </div>
             </div>
 
-            <div>
+            <div className="rounded-2xl border border-slate-200 p-4">
               <label className="mb-2 block text-sm font-semibold text-slate-800">
-                Target Job Description
+                Upload JD PDF
               </label>
-              <textarea
-                value={jdText}
-                onChange={(e) => setJdText(e.target.value)}
-                placeholder="Paste the target Australian job description here..."
-                className="h-96 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setJdFile(file);
+                }}
+                className="block w-full rounded-xl border border-slate-300 bg-white p-3 text-sm"
               />
+              {jdFile && (
+                <p className="mt-2 text-sm text-slate-600">
+                  Selected JD file: {jdFile.name}
+                </p>
+              )}
+
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-semibold text-slate-800">
+                  Or paste JD text
+                </label>
+                <textarea
+                  value={jdText}
+                  onChange={(e) => setJdText(e.target.value)}
+                  placeholder="Paste the target job description here..."
+                  className="h-72 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                />
+              </div>
             </div>
           </div>
 
           <div className="mt-6">
             <button
               onClick={handleAnalyze}
-              disabled={loading || !cvText.trim() || !jdText.trim()}
+              disabled={!canAnalyze}
               className="rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Analyzing..." : "Analyze Profile"}
+              {loading ? "Analyzing..." : "Analyze CV vs JD"}
             </button>
           </div>
 
@@ -174,16 +237,8 @@ export default function HomePage() {
         {result && (
           <section className="mt-8 space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
-              <ResultMetric
-                title="Target Role"
-                value={result.target_role}
-                accent="blue"
-              />
-              <ResultMetric
-                title="Match Score"
-                value={`${result.match_score}/100`}
-                accent="green"
-              />
+              <ResultMetric title="Target Role" value={result.target_role} accent="blue" />
+              <ResultMetric title="Match Score" value={`${result.match_score}/100`} accent="green" />
               <ResultMetric
                 title="Analysis Type"
                 value={useMock ? "Mock Demo Output" : "Live AI Output"}
@@ -198,16 +253,11 @@ export default function HomePage() {
             <div className="grid gap-6 lg:grid-cols-3">
               <ListCard title="Strengths" items={result.strengths} />
               <ListCard title="Missing Skills" items={result.missing_skills} />
-              <ListCard
-                title="Transferable Skills"
-                items={result.transferable_skills}
-              />
+              <ListCard title="Transferable Skills" items={result.transferable_skills} />
             </div>
 
             <ResultCard title="Australian Resume Summary">
-              <p className="leading-7 text-slate-700">
-                {result.australian_resume_summary}
-              </p>
+              <p className="leading-7 text-slate-700">{result.australian_resume_summary}</p>
             </ResultCard>
 
             <ResultCard title="Rewritten Resume Bullet Points">
