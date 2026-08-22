@@ -1,280 +1,327 @@
-import Link from "next/link";
+"use client";
 
-const stats = [
-  { value: "680K+", label: "International students in Australia" },
-  { value: "69%", label: "Employers struggle to find the right skills" },
-  { value: "92%", label: "Tech leaders say AI skills are essential" },
-];
-
-const features = [
-  {
-    title: "Translate Experience",
-    desc: "Convert international study and work experience into language Australian employers understand.",
-  },
-  {
-    title: "Match to Roles",
-    desc: "Compare a CV against a target job description and highlight strengths, gaps, and transferable skills.",
-  },
-  {
-    title: "Prepare with Confidence",
-    desc: "Generate interview questions, resume improvements, and a realistic 30-day action plan.",
-  },
-];
-
-const steps = [
-  "Paste your CV or profile",
-  "Add a target Australian job description",
-  "Get AI-powered employability insights instantly",
-];
+import { useState } from "react";
+import { AnalysisResult } from "@/lib/types";
+import { SAMPLE_CV, SAMPLE_JD } from "@/lib/sample";
 
 export default function HomePage() {
+  const [cvText, setCvText] = useState("");
+  const [jdText, setJdText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [useMock, setUseMock] = useState(true);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState("");
+
+  const loadSample = () => {
+    setCvText(SAMPLE_CV);
+    setJdText(SAMPLE_JD);
+  };
+
+  const clearAll = () => {
+    setCvText("");
+    setJdText("");
+    setResult(null);
+    setError("");
+  };
+
+  const handleAnalyze = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ cvText, jdText, useMock })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      setResult(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to analyze");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#071129] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(89,225,255,0.18),transparent_25%),radial-gradient(circle_at_left,rgba(124,92,255,0.18),transparent_20%)]" />
-      <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:48px_48px]" />
-
-      <section className="relative mx-auto max-w-7xl px-6 py-8 md:px-10 lg:px-12">
-        <nav className="flex items-center justify-between">
-          <div>
-            <p className="text-xl font-semibold tracking-wide text-white">BridgeAU AI</p>
-            <p className="text-sm text-white/60">Future of Work • International Talent</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="#features"
-              className="hidden rounded-full border border-white/15 px-5 py-2.5 text-sm text-white/80 transition hover:border-cyan-300/40 hover:text-white md:inline-flex"
-            >
-              Features
-            </a>
-            <Link
-              href="/app"
-              className="rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-            >
-              Try Demo
-            </Link>
-          </div>
-        </nav>
-
-        <div className="grid items-center gap-14 py-16 lg:grid-cols-2 lg:py-24">
-          <div>
-            <div className="mb-5 inline-flex rounded-full border border-cyan-300/20 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.24em] text-cyan-300">
-              AI Employability Translator
-            </div>
-
-            <h1 className="max-w-3xl text-4xl font-bold leading-tight md:text-6xl">
-              Turn international talent into
-              <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-violet-300 bg-clip-text text-transparent">
-                {" "}
-                Australian job readiness
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70">
-              BridgeAU AI helps international students and skilled migrants translate
-              their experience, understand job-fit gaps, and prepare for real career
-              opportunities in Australia.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/app"
-                className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-base font-semibold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Start Free Demo
-              </Link>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-base font-medium text-white/85 transition hover:border-cyan-300/40 hover:text-white"
-              >
-                See How It Works
-              </a>
-            </div>
-
-            <div className="mt-10 flex flex-wrap gap-6 text-sm text-white/65">
-              <span>✓ Skills translation</span>
-              <span>✓ CV-to-JD matching</span>
-              <span>✓ Interview coaching</span>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute -left-8 top-10 h-40 w-40 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="absolute -right-8 bottom-0 h-48 w-48 rounded-full bg-violet-500/20 blur-3xl" />
-
-            <div className="relative rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl">
-              <div className="rounded-[24px] border border-cyan-300/10 bg-[#0b1738]/90 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-white/55">Live employability analysis</p>
-                    <h3 className="mt-1 text-2xl font-semibold">BridgeAU Report</h3>
-                  </div>
-                  <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 px-4 py-2 text-right">
-                    <p className="text-xs text-white/60">Match Score</p>
-                    <p className="text-2xl font-bold text-cyan-300">78%</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
-                    <p className="text-sm text-white/55">Matched Skills</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {["SQL", "Excel", "Power BI", "Stakeholder Communication"].map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/8 bg-white/5 p-4">
-                    <p className="text-sm text-white/55">Missing Skills</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {["Advanced SQL", "Data Storytelling", "Local Experience"].map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-full bg-white/8 px-3 py-1 text-xs text-white/80"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-2xl border border-white/8 bg-gradient-to-r from-cyan-400/10 to-violet-400/10 p-4">
-                  <p className="text-sm text-white/55">AI Recommendation</p>
-                  <p className="mt-2 text-sm leading-7 text-white/80">
-                    Rewrite your summary using Australian recruitment language, strengthen
-                    evidence of analytics projects, and prepare STAR examples for stakeholder
-                    communication.
-                  </p>
-                </div>
-
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  {["CV Rewrite", "Interview Prep", "30-Day Plan"].map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-2xl border border-white/8 bg-white/5 p-4 text-sm text-white/80"
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <section className="mb-8">
+          <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 p-8 text-white shadow-lg">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="mb-2 inline-block rounded-full bg-white/15 px-3 py-1 text-sm">
+                  Futura Remix Hackathon MVP
+                </p>
+                <h1 className="text-4xl font-bold tracking-tight">BridgeAU AI</h1>
+                <p className="mt-3 max-w-3xl text-slate-200">
+                  Translate international talent into Australian job-readiness.
+                  Analyze CVs, compare with Australian job descriptions, identify
+                  skill gaps, rewrite resume content, and generate interview prep.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-4 text-sm">
+                <p className="font-semibold">Responsible AI</p>
+                <p className="mt-1 text-slate-200">
+                  This tool supports employability preparation only. It does not
+                  make hiring decisions.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-
-        <section className="grid gap-4 md:grid-cols-3">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
-            >
-              <p className="text-3xl font-bold text-cyan-300">{stat.value}</p>
-              <p className="mt-2 text-sm leading-6 text-white/65">{stat.label}</p>
-            </div>
-          ))}
         </section>
 
-        <section id="features" className="py-20">
-          <div className="mb-10 max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300">Core Features</p>
-            <h2 className="mt-3 text-3xl font-bold md:text-4xl">
-              Built to bridge the gap between talent and opportunity
-            </h2>
-            <p className="mt-4 text-white/65">
-              BridgeAU AI focuses on practical job-readiness support that is fast to use,
-              transparent, and helpful for international talent navigating the Australian market.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition hover:border-cyan-300/30 hover:bg-white/7"
-              >
-                <div className="mb-4 h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-300/30 to-violet-400/30" />
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-white/65">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
+        <section className="mb-6 grid gap-4 lg:grid-cols-3">
+          <StatCard title="Primary User" value="International students & skilled migrants" />
+          <StatCard title="Core Outcome" value="Better job-readiness in Australia" />
+          <StatCard title="MVP Mode" value={useMock ? "Mock Demo Mode" : "Live AI Mode"} />
         </section>
 
-        <section
-          id="how-it-works"
-          className="grid items-start gap-8 rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-md lg:grid-cols-[1.2fr_0.8fr]"
-        >
-          <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300">How It Works</p>
-            <h2 className="mt-3 text-3xl font-bold md:text-4xl">
-              From raw experience to job-ready insights in minutes
-            </h2>
-            <p className="mt-4 max-w-2xl text-white/65">
-              Users simply provide their CV and a target role. BridgeAU AI analyzes
-              transferable skills, rewrites experience into local-market language, and
-              generates a practical improvement roadmap.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {steps.map((step, index) => (
-              <div
-                key={step}
-                className="flex items-start gap-4 rounded-2xl border border-white/10 bg-[#0b1738]/80 p-4"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-300 font-semibold text-slate-950">
-                  {index + 1}
-                </div>
-                <p className="pt-1 text-white/85">{step}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="py-20">
-          <div className="rounded-[32px] border border-cyan-300/15 bg-gradient-to-r from-cyan-400/10 via-blue-400/10 to-violet-400/10 p-8 md:p-12">
-            <div className="max-w-3xl">
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300">
-                Responsible AI
-              </p>
-              <h2 className="mt-3 text-3xl font-bold md:text-4xl">
-                Designed to support people, not replace human judgment
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-white/70">
-                BridgeAU AI does not make hiring decisions. It helps candidates improve
-                clarity, confidence, and readiness while encouraging transparency, fairness,
-                and human review.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="pb-12">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-[32px] border border-white/10 bg-white/5 p-8 backdrop-blur-md md:flex-row md:items-center">
+        <section className="rounded-3xl bg-white p-6 shadow-sm">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-cyan-300">Get Started</p>
-              <h2 className="mt-2 text-3xl font-bold">See your employability story in a new way</h2>
-              <p className="mt-3 max-w-2xl text-white/65">
-                Start the demo and turn a CV plus job description into clear, actionable career guidance.
+              <h2 className="text-2xl font-semibold">Profile Analysis</h2>
+              <p className="mt-1 text-slate-600">
+                Paste a candidate CV and target job description to generate an employability analysis.
               </p>
             </div>
 
-            <Link
-              href="/app"
-              className="rounded-full bg-cyan-400 px-6 py-3 text-base font-semibold text-slate-950 transition hover:bg-cyan-300"
-            >
-              Launch Demo
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={loadSample}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+              >
+                Load Sample Data
+              </button>
+              <button
+                onClick={clearAll}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+              >
+                Clear
+              </button>
+            </div>
           </div>
+
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <input
+              id="mockMode"
+              type="checkbox"
+              checked={useMock}
+              onChange={(e) => setUseMock(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <label htmlFor="mockMode" className="text-sm text-slate-700">
+              Use Mock Mode for stable demo without API key
+            </label>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-800">
+                Candidate CV
+              </label>
+              <textarea
+                value={cvText}
+                onChange={(e) => setCvText(e.target.value)}
+                placeholder="Paste the candidate CV text here..."
+                className="h-96 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-800">
+                Target Job Description
+              </label>
+              <textarea
+                value={jdText}
+                onChange={(e) => setJdText(e.target.value)}
+                placeholder="Paste the target Australian job description here..."
+                className="h-96 w-full rounded-2xl border border-slate-300 p-4 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <button
+              onClick={handleAnalyze}
+              disabled={loading || !cvText.trim() || !jdText.trim()}
+              className="rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Analyzing..." : "Analyze Profile"}
+            </button>
+          </div>
+
+          {error && (
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+              {error}
+            </div>
+          )}
         </section>
-      </section>
+
+        {result && (
+          <section className="mt-8 space-y-6">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <ResultMetric
+                title="Target Role"
+                value={result.target_role}
+                accent="blue"
+              />
+              <ResultMetric
+                title="Match Score"
+                value={`${result.match_score}/100`}
+                accent="green"
+              />
+              <ResultMetric
+                title="Analysis Type"
+                value={useMock ? "Mock Demo Output" : "Live AI Output"}
+                accent="amber"
+              />
+            </div>
+
+            <ResultCard title="Candidate Summary">
+              <p className="leading-7 text-slate-700">{result.candidate_summary}</p>
+            </ResultCard>
+
+            <div className="grid gap-6 lg:grid-cols-3">
+              <ListCard title="Strengths" items={result.strengths} />
+              <ListCard title="Missing Skills" items={result.missing_skills} />
+              <ListCard
+                title="Transferable Skills"
+                items={result.transferable_skills}
+              />
+            </div>
+
+            <ResultCard title="Australian Resume Summary">
+              <p className="leading-7 text-slate-700">
+                {result.australian_resume_summary}
+              </p>
+            </ResultCard>
+
+            <ResultCard title="Rewritten Resume Bullet Points">
+              <ul className="list-disc space-y-2 pl-6 text-slate-700">
+                {result.rewritten_bullets.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </ResultCard>
+
+            <ResultCard title="Interview Questions">
+              <div className="space-y-4">
+                {result.interview_questions.map((item, idx) => (
+                  <div key={idx} className="rounded-2xl border border-slate-200 p-4">
+                    <p className="font-semibold text-slate-900">{item.question}</p>
+                    <p className="mt-2 text-sm text-slate-600">{item.why_it_matters}</p>
+                    <ul className="mt-3 list-disc space-y-1 pl-6 text-sm text-slate-700">
+                      {item.suggested_answer_points.map((point, i) => (
+                        <li key={i}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </ResultCard>
+
+            <ResultCard title="30-Day Action Plan">
+              <div className="grid gap-4 lg:grid-cols-2">
+                {result.action_plan_30_days.map((week, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <p className="font-semibold text-slate-900">{week.week}</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-slate-700">
+                      {week.goals.map((goal, i) => (
+                        <li key={i}>{goal}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </ResultCard>
+
+            <ResultCard title="Responsible AI Notes">
+              <ul className="list-disc space-y-2 pl-6 text-slate-700">
+                {result.responsible_ai_notes.map((note, idx) => (
+                  <li key={idx}>{note}</li>
+                ))}
+              </ul>
+            </ResultCard>
+          </section>
+        )}
+      </div>
     </main>
+  );
+}
+
+function StatCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{title}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function ResultMetric({
+  title,
+  value,
+  accent
+}: {
+  title: string;
+  value: string;
+  accent: "blue" | "green" | "amber";
+}) {
+  const classes = {
+    blue: "bg-blue-50 text-blue-900 border-blue-200",
+    green: "bg-emerald-50 text-emerald-900 border-emerald-200",
+    amber: "bg-amber-50 text-amber-900 border-amber-200"
+  };
+
+  return (
+    <div className={`rounded-2xl border p-5 ${classes[accent]}`}>
+      <p className="text-sm font-medium opacity-80">{title}</p>
+      <p className="mt-2 text-2xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function ResultCard({
+  title,
+  children
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl bg-white p-6 shadow-sm">
+      <h3 className="mb-4 text-xl font-semibold text-slate-900">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function ListCard({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-3xl bg-white p-6 shadow-sm">
+      <h3 className="mb-4 text-xl font-semibold text-slate-900">{title}</h3>
+      <ul className="list-disc space-y-2 pl-6 text-slate-700">
+        {items.map((item, idx) => (
+          <li key={idx}>{item}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
