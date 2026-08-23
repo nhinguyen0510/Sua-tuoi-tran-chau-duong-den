@@ -1,6 +1,7 @@
 import { AnalysisResult } from "@/lib/types";
 
 export const MOCK_RESULT: AnalysisResult = {
+  analysis_mode: "mock",
   candidate_summary:
     "The candidate is a recent international graduate with relevant internship experience in business analysis, reporting, stakeholder communication, and testing support. The profile shows solid potential for an entry-level Business Analyst role in Australia, especially where structured documentation, teamwork, and reporting are important.",
   target_role: "Junior Business Analyst",

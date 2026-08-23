@@ -21,4 +21,5 @@ export type AnalysisResult = {
   interview_questions: InterviewQuestion[];
   action_plan_30_days: ActionWeek[];
   responsible_ai_notes: string[];
+  analysis_mode: "live" | "mock";
 };

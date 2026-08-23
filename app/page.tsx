@@ -8,7 +8,7 @@ export default function HomePage() {
   const [cvText, setCvText] = useState("");
   const [jdText, setJdText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [useMock, setUseMock] = useState(true);
+  const [useMock, setUseMock] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
 
@@ -87,7 +87,7 @@ export default function HomePage() {
         <section className="mb-6 grid gap-4 lg:grid-cols-3">
           <StatCard title="Primary User" value="International students & skilled migrants" />
           <StatCard title="Core Outcome" value="Better job-readiness in Australia" />
-          <StatCard title="MVP Mode" value={useMock ? "Mock Demo Mode" : "Live AI Mode"} />
+          <StatCard title="Selected Mode" value={useMock ? "Mock Demo Mode" : "Live AI Mode"} />
         </section>
 
         <section className="rounded-3xl bg-white p-6 shadow-sm">
@@ -186,7 +186,9 @@ export default function HomePage() {
               />
               <ResultMetric
                 title="Analysis Type"
-                value={useMock ? "Mock Demo Output" : "Live AI Output"}
+                value={result.analysis_mode === "live"
+      ? "Live AI Output"
+      : "Mock Demo Output"}
                 accent="amber"
               />
             </div>
